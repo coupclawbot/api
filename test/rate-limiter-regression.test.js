@@ -5,6 +5,17 @@
  * If anyone reverts to using req.token, these tests will fail.
  */
 
+const path = require('path');
+const fs = require('fs');
+
+// Read and evaluate the actual source file to get the real getKey function
+const rateLimitPath = path.join(__dirname, '..', 'src', 'middleware', 'rateLimit.js');
+const rateLimitSource = fs.readFileSync(rateLimitPath, 'utf-8');
+
+// Extract getKey function from source
+let getKey;
+eval(rateLimitSource + '\ngetKey = getKey;');
+
 let passed = 0;
 let failed = 0;
 
@@ -30,19 +41,6 @@ function assertNotEqual(actual, expected, message) {
   if (actual === expected) {
     throw new Error(message || `Expected values to differ, both were "${actual}"`);
   }
-}
-
-function getKey(req, limitType) {
-  const authHeader = req.headers.authorization;
-  let identifier;
-  
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    identifier = authHeader.substring(7);
-  } else {
-    identifier = req.ip || 'anonymous';
-  }
-  
-  return `rl:${limitType}:${identifier}`;
 }
 
 console.log('\n[Rate Limiter Regression Prevention]\n');
