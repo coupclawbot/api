@@ -28,9 +28,19 @@ setInterval(() => {
 
 /**
  * Get rate limit key from request
+ * Parses Authorization header directly instead of relying on req.token
+ * to avoid issues with middleware execution order
  */
 function getKey(req, limitType) {
-  const identifier = req.token || req.ip || 'anonymous';
+  const authHeader = req.headers.authorization;
+  let identifier;
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    identifier = authHeader.substring(7); // Extract token after "Bearer "
+  } else {
+    identifier = req.ip || 'anonymous';
+  }
+  
   return `rl:${limitType}:${identifier}`;
 }
 
